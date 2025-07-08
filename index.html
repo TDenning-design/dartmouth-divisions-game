@@ -70,84 +70,98 @@
   </div>
 
   <script>
-    const items = {
-      "Arts and Humanities Division": "Dean of Faculty",
-      "International and Interdisciplinary Studies": "Dean of Faculty",
-      "Sciences Division": "Dean of Faculty",
-      "Social Sciences Division": "Dean of Faculty",
-      "Faculty Development": "Dean of Faculty",
-      "Residential Life Division": "Dean of Undergraduate Student Affairs",
-      "Student Life Division": "Dean of Undergraduate Student Affairs",
-      "Associate Dean of Student Affairs": "Dean of Undergraduate Student Affairs",
-      "Undergraduate Research and Advising": "Dean of Undergraduate Education",
-      "Pre-Major Advising": "Dean of Undergraduate Education",
-      "Guarini Institute for International Education": "Dean of Undergraduate Education",
-      "Registrar": "Dean of Undergraduate Education",
-      "Student Support Division": "Dean of Undergraduate Education"
-    };
+  const initialItems = {
+    "Arts and Humanities Division": "Dean of Faculty",
+    "International and Interdisciplinary Studies": "Dean of Faculty",
+    "Sciences Division": "Dean of Faculty",
+    "Social Sciences Division": "Dean of Faculty",
+    "Faculty Development": "Dean of Faculty",
+    "Residential Life Division": "Dean of Undergraduate Student Affairs",
+    "Student Life Division": "Dean of Undergraduate Student Affairs",
+    "Associate Dean of Student Affairs": "Dean of Undergraduate Student Affairs",
+    "Undergraduate Research and Advising": "Dean of Undergraduate Education",
+    "Pre-Major Advising": "Dean of Undergraduate Education",
+    "Guarini Institute for International Education": "Dean of Undergraduate Education",
+    "Registrar": "Dean of Undergraduate Education",
+    "Student Support Division": "Dean of Undergraduate Education"
+  };
 
-    let score = 0;
-    const total = Object.keys(items).length;
+  let items = {};
+  let score = 0;
+  let errors = 0;
+  const total = Object.keys(initialItems).length;
 
-    const draggablesContainer = document.getElementById('draggables');
-    const scoreDisplay = document.getElementById('score');
+  const draggablesContainer = document.getElementById('draggables');
+  const scoreDisplay = document.getElementById('score');
+  const errorDisplay = document.getElementById('errors');
 
-    Object.entries(items).forEach(([name, category]) => {
+  function sanitizeId(text) {
+    return text.toLowerCase().replace(/[^a-z0-9]/g, "-");
+  }
+
+  function resetGame() {
+    items = { ...initialItems };
+    score = 0;
+    errors = 0;
+    scoreDisplay.textContent = score;
+    errorDisplay.textContent = errors;
+
+    draggablesContainer.innerHTML = '';
+    document.querySelectorAll('.category').forEach(zone => {
+      zone.innerHTML = `<h3>${zone.dataset.category}</h3>`;
+      zone.classList.remove('incorrect');
+    });
+
+    const shuffled = Object.entries(items).sort(() => Math.random() - 0.5);
+    shuffled.forEach(([name, category]) => {
       const div = document.createElement('div');
       div.textContent = name;
+      div.id = sanitizeId(name);
       div.setAttribute('draggable', true);
       div.dataset.category = category;
 
       div.addEventListener('dragstart', e => {
-        e.dataTransfer.setData('text/plain', name);
+        e.dataTransfer.setData('text/plain', div.id);
       });
 
       draggablesContainer.appendChild(div);
     });
+  }
 
-    document.querySelectorAll('.category').forEach(zone => {
-      zone.addEventListener('dragover', e => e.preventDefault());
+  document.querySelectorAll('.category').forEach(zone => {
+    zone.addEventListener('dragover', e => e.preventDefault());
 
-      zone.addEventListener('drop', e => {
-        e.preventDefault();
-        const name = e.dataTransfer.getData('text/plain');
-        const correctCategory = items[name];
-        const targetCategory = zone.dataset.category;
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      const id = e.dataTransfer.getData('text/plain');
+      const dragged = document.getElementById(id);
+      const name = dragged.textContent;
+      const correctCategory = items[name];
+      const targetCategory = zone.dataset.category;
 
-        if (correctCategory === targetCategory) {
-          const matchedItem = document.querySelector(`div[draggable][data-category="${correctCategory}"]:contains("${name}")`) ||
-                              [...document.querySelectorAll('.draggables div')].find(d => d.textContent === name);
-          if (matchedItem && !matchedItem.classList.contains('matched')) {
-            matchedItem.classList.add('matched');
-            matchedItem.setAttribute('draggable', false);
-            zone.appendChild(matchedItem);
-            score++;
-            scoreDisplay.textContent = score;
-            if (score === total) {
-              alert("🎉 All matched correctly! 🎉");
-            }
-          }
-        }
-      });
+      if (correctCategory === targetCategory) {
+        dragged.classList.add('matched');
+        dragged.setAttribute('draggable', false);
+        zone.appendChild(dragged);
+        score++;
+        delete items[name];
+        scoreDisplay.textContent = score;
+        zone.classList.remove('incorrect');
+      } else {
+        zone.classList.add('incorrect');
+        errors++;
+        errorDisplay.textContent = errors;
+      }
+
+      if (score === total) {
+        setTimeout(() => alert("🎉 All matched correctly! 🎉"), 100);
+      }
     });
+  });
 
-    // Polyfill for :contains in querySelector
-    (function() {
-      if (!Element.prototype.matches) {
-        Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
-      }
-      if (!Element.prototype.closest) {
-        Element.prototype.closest = function(s) {
-          var el = this;
-          do {
-            if (el.matches(s)) return el;
-            el = el.parentElement || el.parentNode;
-          } while (el !== null && el.nodeType === 1);
-          return null;
-        };
-      }
-    })();
-  </script>
+  resetGame();
+</script>
+
 
 </body>
 </html>

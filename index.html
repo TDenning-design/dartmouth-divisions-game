@@ -69,7 +69,8 @@
     </div>
   </div>
 
-  <script>
+  
+<script>
   const initialItems = {
     "Arts and Humanities Division": "Dean of Faculty",
     "International and Interdisciplinary Studies": "Dean of Faculty",
@@ -135,6 +136,8 @@
       e.preventDefault();
       const id = e.dataTransfer.getData('text/plain');
       const dragged = document.getElementById(id);
+      if (!dragged) return;
+
       const name = dragged.textContent;
       const correctCategory = items[name];
       const targetCategory = zone.dataset.category;
@@ -161,7 +164,6 @@
 
   resetGame();
 </script>
-
 
 
 </body>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Dartmouth Division Matching Game</title>
+  <title>Find that Dartmouth Division</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -14,15 +14,22 @@
     }
     .score {
       font-size: 18px;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       text-align: center;
+    }
+    .controls {
+      text-align: center;
+      margin-bottom: 20px;
     }
     .game-container {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
     }
     .draggables, .categories {
-      width: 45%;
+      width: 100%;
+      max-width: 45%;
+      margin-bottom: 30px;
     }
     .draggables div {
       background: #ffffff;
@@ -36,7 +43,8 @@
       padding: 10px;
       margin: 15px 0;
       border: 2px dashed #4a90e2;
-      min-height: 80px;
+      min-height: 100px;
+      transition: background-color 0.3s;
     }
     .category h3 {
       margin-top: 0;
@@ -44,22 +52,43 @@
     .matched {
       background: #c8e6c9 !important;
       border-color: #2e7d32 !important;
+      cursor: default;
+    }
+    .incorrect {
+      background: #ffcdd2 !important;
+      border-color: #c62828 !important;
+    }
+    button {
+      padding: 8px 16px;
+      font-size: 14px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    @media (max-width: 768px) {
+      .game-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .draggables, .categories {
+        width: 90%;
+        max-width: none;
+      }
     }
   </style>
 </head>
 <body>
 
-  <h1>Match the Offices to the Correct Division</h1>
+  <h1>Find that Dartmouth Division</h1>
   <div class="score">
-  Score: <span id="score">0</span> / 13 |
-  Incorrect Attempts: <span id="errors">0</span>
-</div>
-
+    Score: <span id="score">0</span> / 13 |
+    Incorrect Attempts: <span id="errors">0</span>
+  </div>
+  <div class="controls">
+    <button onclick="resetGame()">🔄 Reset Game</button>
+  </div>
 
   <div class="game-container">
-    <div class="draggables" id="draggables">
-      <!-- Items will be populated here -->
-    </div>
+    <div class="draggables" id="draggables"></div>
     <div class="categories">
       <div class="category" data-category="Dean of Faculty">
         <h3>Dean of Faculty</h3>
@@ -73,102 +102,100 @@
     </div>
   </div>
 
-  
-<script>
-  const initialItems = {
-    "Arts and Humanities Division": "Dean of Faculty",
-    "International and Interdisciplinary Studies": "Dean of Faculty",
-    "Sciences Division": "Dean of Faculty",
-    "Social Sciences Division": "Dean of Faculty",
-    "Faculty Development": "Dean of Faculty",
-    "Residential Life Division": "Dean of Undergraduate Student Affairs",
-    "Student Life Division": "Dean of Undergraduate Student Affairs",
-    "Associate Dean of Student Affairs": "Dean of Undergraduate Student Affairs",
-    "Undergraduate Research and Advising": "Dean of Undergraduate Education",
-    "Pre-Major Advising": "Dean of Undergraduate Education",
-    "Guarini Institute for International Education": "Dean of Undergraduate Education",
-    "Registrar": "Dean of Undergraduate Education",
-    "Student Support Division": "Dean of Undergraduate Education"
-  };
+  <script>
+    const initialItems = {
+      "Arts and Humanities Division": "Dean of Faculty",
+      "International and Interdisciplinary Studies": "Dean of Faculty",
+      "Sciences Division": "Dean of Faculty",
+      "Social Sciences Division": "Dean of Faculty",
+      "Faculty Development": "Dean of Faculty",
+      "Residential Life Division": "Dean of Undergraduate Student Affairs",
+      "Student Life Division": "Dean of Undergraduate Student Affairs",
+      "Associate Dean of Student Affairs": "Dean of Undergraduate Student Affairs",
+      "Undergraduate Research and Advising": "Dean of Undergraduate Education",
+      "Pre-Major Advising": "Dean of Undergraduate Education",
+      "Guarini Institute for International Education": "Dean of Undergraduate Education",
+      "Registrar": "Dean of Undergraduate Education",
+      "Student Support Division": "Dean of Undergraduate Education"
+    };
 
-  let items = {};
-  let score = 0;
-  let errors = 0;
-  const total = Object.keys(initialItems).length;
+    let items = {};
+    let score = 0;
+    let errors = 0;
+    const total = Object.keys(initialItems).length;
 
-  const draggablesContainer = document.getElementById('draggables');
-  const scoreDisplay = document.getElementById('score');
-  const errorDisplay = document.getElementById('errors');
+    const draggablesContainer = document.getElementById('draggables');
+    const scoreDisplay = document.getElementById('score');
+    const errorDisplay = document.getElementById('errors');
 
-  function sanitizeId(text) {
-    return text.toLowerCase().replace(/[^a-z0-9]/g, "-");
-  }
+    function sanitizeId(text) {
+      return text.toLowerCase().replace(/[^a-z0-9]/g, "-");
+    }
 
-  function resetGame() {
-    items = { ...initialItems };
-    score = 0;
-    errors = 0;
-    scoreDisplay.textContent = score;
-    errorDisplay.textContent = errors;
+    function resetGame() {
+      items = { ...initialItems };
+      score = 0;
+      errors = 0;
+      scoreDisplay.textContent = score;
+      errorDisplay.textContent = errors;
 
-    draggablesContainer.innerHTML = '';
-    document.querySelectorAll('.category').forEach(zone => {
-      zone.innerHTML = `<h3>${zone.dataset.category}</h3>`;
-      zone.classList.remove('incorrect');
-    });
-
-    const shuffled = Object.entries(items).sort(() => Math.random() - 0.5);
-    shuffled.forEach(([name, category]) => {
-      const div = document.createElement('div');
-      div.textContent = name;
-      div.id = sanitizeId(name);
-      div.setAttribute('draggable', true);
-      div.dataset.category = category;
-
-      div.addEventListener('dragstart', e => {
-        e.dataTransfer.setData('text/plain', div.id);
+      draggablesContainer.innerHTML = '';
+      document.querySelectorAll('.category').forEach(zone => {
+        zone.innerHTML = `<h3>${zone.dataset.category}</h3>`;
+        zone.classList.remove('incorrect');
       });
 
-      draggablesContainer.appendChild(div);
+      const shuffled = Object.entries(items).sort(() => Math.random() - 0.5);
+      shuffled.forEach(([name, category]) => {
+        const div = document.createElement('div');
+        div.textContent = name;
+        div.id = sanitizeId(name);
+        div.setAttribute('draggable', true);
+        div.dataset.category = category;
+
+        div.addEventListener('dragstart', e => {
+          e.dataTransfer.setData('text/plain', div.id);
+        });
+
+        draggablesContainer.appendChild(div);
+      });
+    }
+
+    document.querySelectorAll('.category').forEach(zone => {
+      zone.addEventListener('dragover', e => e.preventDefault());
+
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        const id = e.dataTransfer.getData('text/plain');
+        const dragged = document.getElementById(id);
+        if (!dragged) return;
+
+        const name = dragged.textContent;
+        const correctCategory = items[name];
+        const targetCategory = zone.dataset.category;
+
+        if (correctCategory === targetCategory) {
+          dragged.classList.add('matched');
+          dragged.setAttribute('draggable', false);
+          zone.appendChild(dragged);
+          score++;
+          delete items[name];
+          scoreDisplay.textContent = score;
+          zone.classList.remove('incorrect');
+        } else {
+          zone.classList.add('incorrect');
+          errors++;
+          errorDisplay.textContent = errors;
+        }
+
+        if (score === total) {
+          setTimeout(() => alert("🎉 All matched correctly! 🎉"), 100);
+        }
+      });
     });
-  }
 
-  document.querySelectorAll('.category').forEach(zone => {
-    zone.addEventListener('dragover', e => e.preventDefault());
-
-    zone.addEventListener('drop', e => {
-      e.preventDefault();
-      const id = e.dataTransfer.getData('text/plain');
-      const dragged = document.getElementById(id);
-      if (!dragged) return;
-
-      const name = dragged.textContent;
-      const correctCategory = items[name];
-      const targetCategory = zone.dataset.category;
-
-      if (correctCategory === targetCategory) {
-        dragged.classList.add('matched');
-        dragged.setAttribute('draggable', false);
-        zone.appendChild(dragged);
-        score++;
-        delete items[name];
-        scoreDisplay.textContent = score;
-        zone.classList.remove('incorrect');
-      } else {
-        zone.classList.add('incorrect');
-        errors++;
-        errorDisplay.textContent = errors;
-      }
-
-      if (score === total) {
-        setTimeout(() => alert("🎉 All matched correctly! 🎉"), 100);
-      }
-    });
-  });
-
-  resetGame();
-</script>
-
+    resetGame();
+  </script>
 
 </body>
 </html>

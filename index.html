@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dean Matching Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f0f4f8;
+    }
+    h1 {
+      text-align: center;
+    }
+    .score {
+      font-size: 18px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .game-container {
+      display: flex;
+      justify-content: space-between;
+    }
+    .draggables, .categories {
+      width: 45%;
+    }
+    .draggables div {
+      background: #ffffff;
+      border: 1px solid #ccc;
+      padding: 8px;
+      margin: 5px 0;
+      cursor: grab;
+    }
+    .category {
+      background: #d9eaf7;
+      padding: 10px;
+      margin: 15px 0;
+      border: 2px dashed #4a90e2;
+      min-height: 80px;
+    }
+    .category h3 {
+      margin-top: 0;
+    }
+    .matched {
+      background: #c8e6c9 !important;
+      border-color: #2e7d32 !important;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Match the Offices to the Correct Dean</h1>
+  <div class="score">Score: <span id="score">0</span> / 13</div>
+
+  <div class="game-container">
+    <div class="draggables" id="draggables">
+      <!-- Items will be populated here -->
+    </div>
+    <div class="categories">
+      <div class="category" data-category="Dean of Faculty">
+        <h3>Dean of Faculty</h3>
+      </div>
+      <div class="category" data-category="Dean of Undergraduate Student Affairs">
+        <h3>Dean of Undergraduate Student Affairs</h3>
+      </div>
+      <div class="category" data-category="Dean of Undergraduate Education">
+        <h3>Dean of Undergraduate Education</h3>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const items = {
+      "Arts and Humanities Division": "Dean of Faculty",
+      "International and Interdisciplinary Studies": "Dean of Faculty",
+      "Sciences Division": "Dean of Faculty",
+      "Social Sciences Division": "Dean of Faculty",
+      "Faculty Development": "Dean of Faculty",
+      "Residential Life Division": "Dean of Undergraduate Student Affairs",
+      "Student Life Division": "Dean of Undergraduate Student Affairs",
+      "Associate Dean of Student Affairs": "Dean of Undergraduate Student Affairs",
+      "Undergraduate Research and Advising": "Dean of Undergraduate Education",
+      "Pre-Major Advising": "Dean of Undergraduate Education",
+      "Guarini Institute for International Education": "Dean of Undergraduate Education",
+      "Registrar": "Dean of Undergraduate Education",
+      "Student Support Division": "Dean of Undergraduate Education"
+    };
+
+    let score = 0;
+    const total = Object.keys(items).length;
+
+    const draggablesContainer = document.getElementById('draggables');
+    const scoreDisplay = document.getElementById('score');
+
+    Object.entries(items).forEach(([name, category]) => {
+      const div = document.createElement('div');
+      div.textContent = name;
+      div.setAttribute('draggable', true);
+      div.dataset.category = category;
+
+      div.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', name);
+      });
+
+      draggablesContainer.appendChild(div);
+    });
+
+    document.querySelectorAll('.category').forEach(zone => {
+      zone.addEventListener('dragover', e => e.preventDefault());
+
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        const name = e.dataTransfer.getData('text/plain');
+        const correctCategory = items[name];
+        const targetCategory = zone.dataset.category;
+
+        if (correctCategory === targetCategory) {
+          const matchedItem = document.querySelector(`div[draggable][data-category="${correctCategory}"]:contains("${name}")`) ||
+                              [...document.querySelectorAll('.draggables div')].find(d => d.textContent === name);
+          if (matchedItem && !matchedItem.classList.contains('matched')) {
+            matchedItem.classList.add('matched');
+            matchedItem.setAttribute('draggable', false);
+            zone.appendChild(matchedItem);
+            score++;
+            scoreDisplay.textContent = score;
+            if (score === total) {
+              alert("🎉 All matched correctly! 🎉");
+            }
+          }
+        }
+      });
+    });
+
+    // Polyfill for :contains in querySelector
+    (function() {
+      if (!Element.prototype.matches) {
+        Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+      }
+      if (!Element.prototype.closest) {
+        Element.prototype.closest = function(s) {
+          var el = this;
+          do {
+            if (el.matches(s)) return el;
+            el = el.parentElement || el.parentNode;
+          } while (el !== null && el.nodeType === 1);
+          return null;
+        };
+      }
+    })();
+  </script>
+
+</body>
+</html>
